@@ -45,7 +45,7 @@ func (s *Server) Run() {
 			log.Println("Recieved error:", err)
 			continue
 		}
-
-		log.Println("Recieved", msg, "from:", clientId)
+		log.Println("Recieved", string(msg), "from:", clientId)
+		s.Network.Send(clientId, []byte("Hello client!"))
 	}
 }
