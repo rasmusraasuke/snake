@@ -1,6 +1,6 @@
 package state
 
-import "github.com/hajimehoshi/ebiten"
+import "github.com/hajimehoshi/ebiten/v2"
 
 type GameState interface {
 	Draw(screen *ebiten.Image)

@@ -7,8 +7,16 @@ import (
 	"net"
 )
 
+type ClientStatus int
+
+const (
+	Offline = iota
+	Online
+)
+
 type TCPClient struct {
 	Addr     string
+	Status   ClientStatus
 	Conn     net.Conn
 	Send     chan []byte
 	Incoming chan []byte
@@ -18,22 +26,24 @@ type TCPClient struct {
 func NewTCPClient(addr string) *TCPClient {
 	return &TCPClient{
 		Addr:     addr,
+		Status:   Offline,
 		Send:     make(chan []byte, 1024),
 		Incoming: make(chan []byte, 1024),
 		Done:     make(chan struct{}),
 	}
 }
 
-func (c *TCPClient) Connect() error {
+func (c *TCPClient) Connect() {
 	conn, err := net.Dial("tcp", c.Addr)
 	if err != nil {
-		return err
+		log.Println(err)
+		return
 	}
 	c.Conn = conn
+	c.Status = Online
 
 	go c.readLoop()
 	go c.writeLoop()
-	return nil
 }
 
 func (c *TCPClient) SendMessage(msg []byte) {
