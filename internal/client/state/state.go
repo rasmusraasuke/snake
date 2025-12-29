@@ -1,9 +1,13 @@
 package state
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/ebitenui/ebitenui/widget"
+)
 
 type GameState interface {
-	Draw(screen *ebiten.Image)
-	Update() error
-	Listen(msg []byte) // Todo make a messgae mapper
+	Root() *widget.Container
+}
+
+type NetworkListener interface {
+	OnServerMessage(msg []byte)
 }

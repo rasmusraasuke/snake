@@ -10,6 +10,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/rasmusraasuke/snake/internal/client/network"
 	"github.com/rasmusraasuke/snake/internal/client/state"
+	"github.com/rasmusraasuke/snake/internal/client/ui"
 	"golang.org/x/image/colornames"
 )
 
@@ -21,6 +22,7 @@ type Game struct {
 }
 
 func New(client *network.TCPClient) *Game {
+	ui.InitFonts()
 	client.Connect()
 
 	root := widget.NewContainer(
@@ -28,12 +30,20 @@ func New(client *network.TCPClient) *Game {
 			image.NewNineSliceColor(colornames.Mediumseagreen),
 		),
 	)
+	ebitenUI := &ebitenui.UI{Container: root}
+
 	g := &Game{
 		client: client,
-		ui:     &ebitenui.UI{Container: root},
+		ui:     ebitenUI,
 	}
 
 	go g.listen()
+
+	g.SetState(state.NewMainMenu(
+		func() {},
+		func() {},
+		func() {},
+	))
 
 	return g
 }
@@ -41,10 +51,20 @@ func New(client *network.TCPClient) *Game {
 func (g *Game) listen() {
 	for msg := range g.client.Incoming {
 		g.mu.Lock()
-		log.Println("Server sent:", string(msg))
+		if listener, ok := g.state.(state.NetworkListener); ok {
+			listener.OnServerMessage(msg)
+		}
 		g.mu.Unlock()
 	}
 	log.Println("Server Connection closed")
+}
+
+func (g *Game) SetState(s state.GameState) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	g.state = s
+	g.ui.Container = s.Root()
 }
 
 func (g *Game) Update() error {
@@ -57,9 +77,8 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	defer g.mu.Unlock()
 
 	g.ui.Draw(screen)
-	// draw something
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeigh int) (screenWidth, screenHeight int) {
-	return 320, 240
+func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	return outsideWidth, outsideHeight
 }

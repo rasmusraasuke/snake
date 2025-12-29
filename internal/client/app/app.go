@@ -20,8 +20,9 @@ func Run() {
 	client := network.NewTCPClient(fmt.Sprintf(":%s", os.Getenv("PORT")))
 
 	game := game.New(client)
-	
-	ebiten.SetWindowSize(640, 480)
+
+	x, y := ebiten.Monitor().Size()
+	ebiten.SetWindowSize(x, y)
 	ebiten.SetWindowTitle("Snake")
 	if err := ebiten.RunGame(game); err != nil {
 		log.Panic(err)
