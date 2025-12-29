@@ -7,7 +7,7 @@ import (
 	"net"
 )
 
-type ClientStatus int
+type NetworkStatus int
 
 const (
 	Offline = iota
@@ -16,7 +16,7 @@ const (
 
 type TCPClient struct {
 	Addr     string
-	Status   ClientStatus
+	Status   NetworkStatus
 	Conn     net.Conn
 	Send     chan []byte
 	Incoming chan []byte
@@ -89,4 +89,5 @@ func (c *TCPClient) writeLoop() {
 func (c *TCPClient) Close() {
 	c.Conn.Close()
 	close(c.Send)
+	c.Status = Offline
 }

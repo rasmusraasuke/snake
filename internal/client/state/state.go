@@ -4,7 +4,7 @@ import (
 	"github.com/ebitenui/ebitenui/widget"
 )
 
-type GameState interface {
+type ClientState interface {
 	Root() *widget.Container
 }
 

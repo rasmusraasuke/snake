@@ -1,4 +1,4 @@
-package game
+package client
 
 import (
 	"log"
@@ -14,16 +14,16 @@ import (
 	"golang.org/x/image/colornames"
 )
 
-type Game struct {
-	client *network.TCPClient
+type Client struct {
+	netClient *network.TCPClient
 	mu     sync.Mutex
 	ui     *ebitenui.UI
-	state  state.GameState
+	state  state.ClientState
 }
 
-func New(client *network.TCPClient) *Game {
+func New(netClient *network.TCPClient) *Client {
 	ui.InitFonts()
-	client.Connect()
+	netClient.Connect()
 
 	root := widget.NewContainer(
 		widget.ContainerOpts.BackgroundImage(
@@ -32,53 +32,53 @@ func New(client *network.TCPClient) *Game {
 	)
 	ebitenUI := &ebitenui.UI{Container: root}
 
-	g := &Game{
-		client: client,
+	client := &Client{
+		netClient: netClient,
 		ui:     ebitenUI,
 	}
 
-	go g.listen()
+	go client.listen()
 
-	g.SetState(state.NewMainMenu(
+	client.SetState(state.NewMainMenu(
 		func() {},
 		func() {},
 		func() {},
 	))
 
-	return g
+	return client
 }
 
-func (g *Game) listen() {
-	for msg := range g.client.Incoming {
-		g.mu.Lock()
-		if listener, ok := g.state.(state.NetworkListener); ok {
+func (c *Client) listen() {
+	for msg := range c.netClient.Incoming {
+		c.mu.Lock()
+		if listener, ok := c.state.(state.NetworkListener); ok {
 			listener.OnServerMessage(msg)
 		}
-		g.mu.Unlock()
+		c.mu.Unlock()
 	}
 	log.Println("Server Connection closed")
 }
 
-func (g *Game) SetState(s state.GameState) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
+func (c *Client) SetState(s state.ClientState) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
-	g.state = s
-	g.ui.Container = s.Root()
+	c.state = s
+	c.ui.Container = s.Root()
 }
 
-func (g *Game) Update() error {
-	g.ui.Update()
+func (c *Client) Update() error {
+	c.ui.Update()
 	return nil
 }
 
-func (g *Game) Draw(screen *ebiten.Image) {
-	g.mu.Lock()
-	defer g.mu.Unlock()
+func (c *Client) Draw(screen *ebiten.Image) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
-	g.ui.Draw(screen)
+	c.ui.Draw(screen)
 }
 
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+func (c *Client) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return outsideWidth, outsideHeight
 }
