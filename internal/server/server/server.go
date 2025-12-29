@@ -17,7 +17,7 @@ type GameMap = map[lobby.LobbyId]game.Game
 type ScoreMap = map[player.PlayerId]int64
 
 type Server struct {
-	Network *network.TCPNetwork
+	Network network.Network
 	Players PlayerMap
 	Lobbies LobbyMap
 	Games   GameMap
