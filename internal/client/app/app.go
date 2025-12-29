@@ -5,7 +5,9 @@ import (
 	"log"
 	"os"
 
+	"github.com/hajimehoshi/ebiten"
 	"github.com/joho/godotenv"
+	"github.com/rasmusraasuke/snake/internal/client/game"
 	"github.com/rasmusraasuke/snake/internal/client/network"
 )
 
@@ -15,23 +17,16 @@ func Run() {
 		log.Fatal("Error loading .env file")
 	}
 
-	log.Println("Client starting...")
 	client := network.NewTCPClient(fmt.Sprintf(":%s", os.Getenv("PORT")))
 
-	if err := client.Connect(); err != nil {
-		log.Panic(err)
+	game, err := game.New(client)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	message := "Hello server!"
-	client.SendMessage([]byte(message))
-	log.Println("Sent message to server:", message)
-
-	go func() {
-		for msg := range client.Incoming {
-			log.Println("Received:", string(msg), "from server")
-		}
-	}()
-
-	<-client.Done
-	log.Println("Connection closed")
+	ebiten.SetWindowSize(640, 480)
+	ebiten.SetWindowTitle("Snake")
+	if err := ebiten.RunGame(game); err != nil {
+		log.Panic(err)
+	}
 }
